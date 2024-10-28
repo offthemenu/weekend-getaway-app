@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './GetawayRecommender.css';
 
 const GetawayRecommender = () => {
   const [activity, setActivity] = useState('');
@@ -33,7 +34,7 @@ const GetawayRecommender = () => {
 
   return (
     <div>
-      <h1>Weekend Getaway Recommender</h1>
+      <h1>Git Ahhhhhtta Here</h1>
       
       <label>Activity:
         <select value={activity} onChange={(e) => setActivity(e.target.value)}>
@@ -49,7 +50,15 @@ const GetawayRecommender = () => {
           type="number"
           min="1"
           value={numPeople}
-          onChange={(e) => setNumPeople(Number(e.target.value) || 1)}
+          onChange={(e) => {
+            const value = e.target.value;
+            setNumPeople(value=== "" ? "" : parseInt(value));
+          }}
+          onBlur={() => {
+            if (numPeople === "" || numPeople < 1) {
+                setNumPeople(1);
+            }
+          }}
         />
       </label>
 
