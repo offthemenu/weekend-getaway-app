@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import "./GetawayRecommender.css";
-import { getAccessToken, fetchIATACode, fetchDestinations, fetchAttractions, fetchCoordinates, fetchHotels } from "../services/amadeusService";
-import { fetchWeatherForecast, checkWeatherPreference, filterForecastByDate } from "../services/weatherService";
+import {
+  fetchIATACode,
+  fetchDestinations,
+  fetchAttractions,
+  fetchHotels,
+} from "../services/amadeusService";
+import {
+  fetchWeatherForecast,
+  checkWeatherPreference,
+} from "../services/weatherService";
 
 const GetawayRecommender = () => {
   const [activity, setActivity] = useState("");
@@ -13,6 +21,8 @@ const GetawayRecommender = () => {
   const [departureDay, setDepartureDay] = useState("Friday");
   const [earliestDepartureTime, setEarliestDepartureTime] = useState("");
   const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Recalculate total budget whenever numPeople or budgetPerPerson changes
   useEffect(() => {
@@ -46,23 +56,39 @@ const GetawayRecommender = () => {
   }, [departureDay]);
 
   const handleSearch = async () => {
-    console.log(`Searching for getaways with:
-      Departure Location: ${departureLocation},
-      Activity: ${activity},
-      Total Budget: ${totalBudget},
-      Weather Preference: ${weatherPref},
-      Earliest Departure Time: ${earliestDepartureTime}`);
-
-    setRecommendations([
-      {
-        city: "Sample City",
-        country: "Sample Country",
-        lodging: [{ name: "Sample Hotel", price: 150 }],
-        travelOptions: [{ type: "Flight", price: 200 }],
-        attractions: [{ name: "Sample Attraction" }],
-        weather: { description: "Sunny", temp: 75 },
-      },
-    ]);
+    setLoading(true);
+    setError(null);
+    try {
+      const iataCode = await fetchIATACode(departureLocation);
+      const flightBudget = totalBudget * .4; // arbitrary but we'll try with 40%
+      const destinations = await fetchDestinations(iataCode, flightBudget);
+      const recommendations = await Promise.all(
+        destinations.map(async (destination) => {
+          const lodgingBudget = totalBudget - destination.price.total;
+          const hotels = await fetchHotels(destination.destination, lodgingBudget);
+          const { latitude, longitude } = destination;
+          const attractions = await fetchAttractions(latitude, longitude, activity);
+          const weatherData = await fetchWeatherForecast(destination.destination);
+          const matchesWeather = checkWeatherPreference(weatherData, weatherPref);
+          if (matchesWeather) {
+            return {
+              city: destination.destination,
+              country: destination.country,
+              lodging: hotels,
+              travelOptions: [{ type: "Flight", price: destination.price.total }],
+              attractions,
+              weather: weatherData[0],
+            };
+          }
+          return null;
+        })
+      );
+      setRecommendations(recommendations.filter((rec) => rec));
+    } catch (error) {
+      setError("Error fetching recommendations.")
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -76,7 +102,7 @@ const GetawayRecommender = () => {
             Departure Location:
             <input
               type="text"
-              placeholder="Enter city or zip code"
+              placeholder="Which city do you live?"
               value={departureLocation}
               onChange={(e) => setDepartureLocation(e.target.value)}
             />
