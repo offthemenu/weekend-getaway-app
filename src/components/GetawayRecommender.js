@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./GetawayRecommender.css";
-import { getAccessToken, fetchIATACode, fetchDestinations,  } from "../services/amadeusService";
+import { getAccessToken, fetchIATACode, fetchDestinations, fetchAttractions, fetchCoordinates, fetchHotels } from "../services/amadeusService";
+import { fetchWeatherForecast, checkWeatherPreference, filterForecastByDate } from "../services/weatherService";
 
 const GetawayRecommender = () => {
   const [activity, setActivity] = useState("");
