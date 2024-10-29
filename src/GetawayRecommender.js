@@ -66,7 +66,15 @@ const GetawayRecommender = () => {
         <input
           type="number"
           value={budgetPerPerson}
-          onChange={(e) => setBudgetPerPerson(Number(e.target.value))}
+          onChange={(e) => {
+            const value = e.target.value;
+            setBudgetPerPerson(value === "" ? "" : parseInt(value));
+          }}
+          onBlur={() => {
+            if (budgetPerPerson === "" || budgetPerPerson < 1) {
+              setBudgetPerPerson(1);
+            }
+          }} 
         />
       </label>
 
