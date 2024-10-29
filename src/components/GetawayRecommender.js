@@ -5,11 +5,8 @@ import {
   fetchDestinations,
   fetchAttractions,
   fetchHotels,
+  fetchCityNameFromIATACode
 } from "../services/amadeusService";
-import {
-  fetchWeatherForecast,
-  checkWeatherPreference,
-} from "../services/weatherService";
 
 const GetawayRecommender = () => {
   const [activity, setActivity] = useState("");
@@ -60,32 +57,52 @@ const GetawayRecommender = () => {
     setError(null);
     try {
       const iataCode = await fetchIATACode(departureLocation);
-      const flightBudget = totalBudget * .4; // arbitrary but we'll try with 40%
+      if (!iataCode) {
+        setError("Could not find IATA code for the departure location.");
+        setLoading(false);
+        return;
+      }
+
+      const flightBudget = Math.floor(totalBudget * 0.6); // arbitrary but we'll try with 40%
+
       const destinations = await fetchDestinations(iataCode, flightBudget);
+      if (!destinations || destinations.length === 0) {
+        setError(
+          "No destinations found within budget. Try adjusting criteria."
+        );
+        setLoading(false);
+        return;
+      }
+      const topDestinations = destinations.slice(0, 3);
+      
       const recommendations = await Promise.all(
-        destinations.map(async (destination) => {
+        topDestinations.map(async (destination) => {
           const lodgingBudget = totalBudget - destination.price.total;
-          const hotels = await fetchHotels(destination.destination, lodgingBudget);
+          const hotels = await fetchHotels(
+            destination.destination,
+            lodgingBudget
+          );
           const { latitude, longitude } = destination;
-          const attractions = await fetchAttractions(latitude, longitude, activity);
-          const weatherData = await fetchWeatherForecast(destination.destination);
-          const matchesWeather = checkWeatherPreference(weatherData, weatherPref);
-          if (matchesWeather) {
-            return {
-              city: destination.destination,
-              country: destination.country,
-              lodging: hotels,
-              travelOptions: [{ type: "Flight", price: destination.price.total }],
-              attractions,
-              weather: weatherData[0],
-            };
-          }
-          return null;
+          const attractions = await fetchAttractions(
+            latitude,
+            longitude,
+            activity
+          );
+
+          const cityName = await fetchCityNameFromIATACode(destination.destination);
+          
+          return {
+            city: cityName,
+            country: destination.country,
+            lodging: hotels,
+            travelOptions: [{ type: "Flight", price: destination.price.total }],
+            attractions,
+          };
         })
       );
       setRecommendations(recommendations.filter((rec) => rec));
     } catch (error) {
-      setError("Error fetching recommendations.")
+      setError("Error fetching recommendations.");
     } finally {
       setLoading(false);
     }
@@ -95,7 +112,7 @@ const GetawayRecommender = () => {
     <div className="getaway-container">
       <h1>Git Ahhhhhtta Here</h1>
 
-      {/* Add form-container wrapper here */}
+      {/* Input form fields */}
       <div className="form-container">
         <div className="input-field">
           <label>
@@ -184,56 +201,43 @@ const GetawayRecommender = () => {
           <label>Total Budget: ${totalBudget}</label>
         </div>
 
-        <div className="input-field">
-          <label>
-            Weather Preference:
-            <select
-              value={weatherPref}
-              onChange={(e) => setWeatherPref(e.target.value)}
-            >
-              <option value="">Select Weather</option>
-              <option value="sunny">Sunny</option>
-              <option value="mild">Mild</option>
-              <option value="rainy">Rainy</option>
-            </select>
-          </label>
-        </div>
-
         <button className="search-button" onClick={handleSearch}>
           Find Getaways
         </button>
       </div>
 
+      {loading && <p>Cooking up your weekend getaway...</p>}
+      {error && <p className="error">{error}</p>}
+
+      {/* Recommendations Display */}
       <div className="recommendations">
-        {recommendations.map((rec, index) => (
-          <div key={index}>
-            <h2>
-              {rec.city}, {rec.country}
-            </h2>
-            <p>
-              Weather Forecast: {rec.weather.description}, {rec.weather.temp}°F
-            </p>
+        {recommendations && recommendations.length > 0
+          ? recommendations.map((rec, index) => (
+              <div key={index} className="recommendation">
+                <h2>
+                  {rec.city}
+                </h2>
 
-            <h3>Lodging Options</h3>
-            {rec.lodging.map((lodging, i) => (
-              <p key={i}>
-                {lodging.name} - ${lodging.price}
+                <h3>Flight Options</h3>
+                {/* Ensure `rec.travelOptions` is not null before mapping */}
+                {rec.travelOptions && rec.travelOptions.length > 0 ? (
+                  rec.travelOptions.map((option, i) => (
+                    <p key={i}>
+                      {option.type}: ${option.price}
+                    </p>
+                  ))
+                ) : (
+                  <p>No flight options available.</p>
+                )}
+              </div>
+            ))
+          : !loading &&
+            !error && (
+              <p>
+                No recommendations found. Try adjusting your criteria...or just
+                clean your house or something.
               </p>
-            ))}
-
-            <h3>Travel Options</h3>
-            {rec.travelOptions.map((option, i) => (
-              <p key={i}>
-                {option.type} - ${option.price}
-              </p>
-            ))}
-
-            <h3>Local Attractions</h3>
-            {rec.attractions.map((attraction, i) => (
-              <p key={i}>{attraction.name}</p>
-            ))}
-          </div>
-        ))}
+            )}
       </div>
     </div>
   );
