@@ -7,6 +7,7 @@ const GetawayRecommender = () => {
   const [budgetPerPerson, setBudgetPerPerson] = useState(100); // Default budget per person
   const [totalBudget, setTotalBudget] = useState(numPeople * budgetPerPerson);
   const [weatherPref, setWeatherPref] = useState('');
+  const [departureLocation, setDepartureLocation] = useState('');
   const [recommendations, setRecommendations] = useState([]);
 
   // Recalculate total budget whenever numPeople or budgetPerPerson changes
@@ -16,6 +17,7 @@ const GetawayRecommender = () => {
 
   const handleSearch = async () => {
     console.log(`Searching for getaways with:
+      Departure Location: ${departureLocation},
       Activity: ${activity},
       Total Budget: ${totalBudget},
       Weather Preference: ${weatherPref}`);
@@ -35,6 +37,17 @@ const GetawayRecommender = () => {
   return (
     <div>
       <h1>Git Ahhhhhtta Here</h1>
+
+      <div className='input-field'>
+        <label>Departure Location:
+          <input
+            type='text'
+            placeholder='Enter ity of zip code'
+            value={departureLocation}
+            onChange={(e) => setDepartureLocation(e.target.value)}
+          />
+        </label>
+      </div>
       
       <label>Activity:
         <select value={activity} onChange={(e) => setActivity(e.target.value)}>
