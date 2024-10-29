@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./GetawayRecommender.css";
+import { getAccessToken, fetchIATACode, fetchDestinations,  } from "../services/amadeusService";
 
 const GetawayRecommender = () => {
   const [activity, setActivity] = useState("");
@@ -9,7 +10,7 @@ const GetawayRecommender = () => {
   const [weatherPref, setWeatherPref] = useState("");
   const [departureLocation, setDepartureLocation] = useState("");
   const [departureDay, setDepartureDay] = useState("Friday");
-  const [earliestDepartureTime, setEarliestDepartureTime] = useState("")
+  const [earliestDepartureTime, setEarliestDepartureTime] = useState("");
   const [recommendations, setRecommendations] = useState([]);
 
   // Recalculate total budget whenever numPeople or budgetPerPerson changes
@@ -21,17 +22,19 @@ const GetawayRecommender = () => {
     const calculateEarliestDepartureTime = () => {
       const now = new Date();
       const dayOfWeek = now.getDay();
-      
-      const daysUntilNextFriday = (5 - dayOfWeek + 7) % 7 || (now.getHours() >= 17 ? 7 : 0);
-      const daysUntilNextSaturday = (6 - dayOfWeek + 7) % 7 || (now.getHours() >= 5 ? 7 : 0);
-      
+
+      const daysUntilNextFriday =
+        (5 - dayOfWeek + 7) % 7 || (now.getHours() >= 17 ? 7 : 0);
+      const daysUntilNextSaturday =
+        (6 - dayOfWeek + 7) % 7 || (now.getHours() >= 5 ? 7 : 0);
+
       const nextFriday = new Date(now);
       nextFriday.setDate(now.getDate() + daysUntilNextFriday);
-      nextFriday.setHours(17,0,0,0);
+      nextFriday.setHours(17, 0, 0, 0);
 
       const nextSaturday = new Date(now);
       nextSaturday.setDate(now.getDate() + daysUntilNextSaturday);
-      nextSaturday.setHours(5,0,0,0);
+      nextSaturday.setHours(5, 0, 0, 0);
 
       return departureDay === "Friday"
         ? nextFriday.toLocaleString()
@@ -86,7 +89,7 @@ const GetawayRecommender = () => {
               value={departureDay}
               onChange={(e) => setDepartureDay(e.target.value)}
             >
-              <option value= "Friday">Friday</option>
+              <option value="Friday">Friday</option>
               <option value="Saturday">Saturday</option>
             </select>
           </label>
