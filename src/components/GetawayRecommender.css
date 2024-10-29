@@ -1,0 +1,48 @@
+.getaway-container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.form-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 150px;
+}
+
+label {
+  font-weight: bold;
+  margin-right: 10px;
+  flex: 1;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  padding: 5px;
+  font-size: 16px;
+  width: auto; /* Adjust as needed for dropdown and input */
+}
+
+.search-button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.recommendations {
+  margin-top: 20px;
+  text-align: left;
+}

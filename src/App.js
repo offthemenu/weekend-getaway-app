@@ -1,6 +1,4 @@
-import logo from './logo.svg';
-import './App.css';
-import GetawayRecommender from './GetawayRecommender';
+import GetawayRecommender from './components/GetawayRecommender';
 
 function App() {
   return (
